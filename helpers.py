@@ -26,7 +26,7 @@ def get_text_from_url(url_link):
         content_text = 'This page did not have any text body'
     return content_text
 
-def organize(articles):
+def organize(articles, show_text = True):
     """
     Takes in the result of the NY Times search method (which is a python dictionary)
 
@@ -37,13 +37,16 @@ def organize(articles):
     Note: these elements in the dictionary can be changed easily, so please change them if needed.
     I thought these would be nice to have, so change this code if any of this information is useless to have
     """
+    if 'response' not in articles.keys():
+        return None
     l = []
     for article in articles['response']['docs']:
         new_art = {}
         new_art['headline'] = article['headline']['main']
         new_art['date_published'] = article['pub_date'][5:7]+'/'+article['pub_date'][8:10]+"/"+article['pub_date'][:4]
         new_art['url'] = article['web_url']
-        new_art['text'] = get_text_from_url(article['web_url'])
+        if show_text:
+            new_art['text'] = get_text_from_url(article['web_url'])
         l.append(new_art)
     return l
 
