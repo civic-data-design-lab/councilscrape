@@ -4,7 +4,17 @@ import csv
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 from bs4 import BeautifulSoup as bs
+from nytimesarticle import articleAPI
 
+API_KEY = 'U4XXY5ozk9hpOMIJEAaLAFWPk9Wui5Cl'
+
+def get_articles(**kwargs):
+    """
+    Uses nytimesarticle library to search nytimes API
+    """
+    api = articleAPI(API_KEY)
+    return api.search(**kwargs)
+     
 def get_text_from_url(url_link):
     """
     Takes a url as input (as a standard python str)
@@ -18,12 +28,12 @@ def get_text_from_url(url_link):
     try:
         page = bs(urlopen(r).read(), 'html.parser')
     except HTTPError: ##raised if url page no longer exists
-        return 'This url no longer exists, and no text could be extracted.'
+        return None
     content_body = page.find('section', itemprop='articleBody')
     try:
         content_text = content_body.text.strip()
     except AttributeError:
-        content_text = 'This page did not have any text body'
+        return None
     return content_text
 
 def organize(articles, show_text = True):
@@ -42,9 +52,13 @@ def organize(articles, show_text = True):
     l = []
     for article in articles['response']['docs']:
         new_art = {}
+        new_art['url'] = article['web_url']
+        ##Check to see if article has text:
+        article_text = get_text_from_url(article['web_url'])
+        if article_text is None: ##ignore the article if no text inside
+            continue
         new_art['headline'] = article['headline']['main']
         new_art['date_published'] = article['pub_date'][5:7]+'/'+article['pub_date'][8:10]+"/"+article['pub_date'][:4]
-        new_art['url'] = article['web_url']
         if show_text:
             new_art['text'] = get_text_from_url(article['web_url'])
         l.append(new_art)
@@ -67,8 +81,10 @@ def convert_articles_to_output_file(filename, articles):
             new_f.writeheader()
             new_f.writerows(articles)
 
+
 if __name__ == '__main__':
-    ##Quick test:
-    req = requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q=obama&fq=body:("Obama")&begin_date=20200201&api-key=U4XXY5ozk9hpOMIJEAaLAFWPk9Wui5Cl')
-    articles = req.json()
-    print(organize(articles))
+    ##Use this to test:
+    raw_articles = get_articles(q='City Council', fq = {}, begin_date = 20200101)
+    organized = organize(raw_articles, False)
+    print(organized)
+  
