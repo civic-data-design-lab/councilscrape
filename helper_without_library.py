@@ -18,30 +18,15 @@ def get_articles(api_key,q,fq,begin_date=None,end_date=None):
     """
     returns articles outputted from search
     """
-    response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&api-key={}'.format(q,fq,api_key))
+    if begin_date==None and end_date==None:
+        response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&api-key={}'.format(q,fq,api_key))
+    elif begin_date==None and end_date:
+        response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&api-key={}&end_date={}'.format(q,fq,api_key,end_date))
+    elif end_date==None and begin_date:
+        response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&api-key={}&begin_date={}'.format(q,fq,api_key,begin_date))
+    else:
+        response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&api-key={}&begin_date={}&end_date={}'.format(q,fq,api_key,begin_date,end_date))
     return response.json()
-
-'''    
-def get_text_from_url(url_link):
-    """
-    Takes a url as input (as a standard python str)
-    Returns: Body text from given url as a standard python string
-    Some text includes line skips (\n)'s.
-    """
-    ##get url request
-    r = Request(url_link, headers = {'User-Agent': 'Mozilla/5.0'})
-    ##get webpage
-    try:
-        page = bs(urlopen(r).read(), 'html.parser')
-    except HTTPError: ##raised if url page no longer exists
-        return None
-    content_body = page.find('section', itemprop='articleBody')
-    try:
-        content_text = content_body.text.strip()
-    except AttributeError:
-        return None
-    return content_text
-'''
 
 def organize(articles, show_text = True):
     """
@@ -97,6 +82,6 @@ def convert_articles_to_output_file(filename, articles):
 
 if __name__ == '__main__':
     ##Use this to test:
-    raw_articles = get_articles(API_KEY, q='City Council', fq = 'body:("Obama")')
+    raw_articles = get_articles(API_KEY, q='City Council', fq = 'body:("Obama")',begin_date=20120101,end_date=20121231)
     organized = organize(raw_articles, False)
     print(organized)
