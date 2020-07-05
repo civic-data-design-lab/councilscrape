@@ -60,7 +60,30 @@ def organize(articles, show_text = True):
             new_art['text'] = article_text
         l.append(new_art)
     return l
-    
+
+def clean_string(text):
+    """
+    Helper function that takes in an article text as a string
+
+    Returns: new string with article text cleaned up
+    """
+    punct = '?.,!'
+    closing = '”’'
+    opening = '“‘'
+    alph = 'qwertyuiopasdfghjklzxcvbnm'
+    for letter in alph:
+        for p in punct:
+            text = text.replace(p+letter, p+' '+letter)
+            text = text.replace(p+letter.lower(),p + ' '+letter.lower())
+    for c in closing:
+        text = text.replace(c, c+' ')
+    for o in opening:
+        text = text.replace(o, ' '+o)
+    replacements = {'\n': '', '‘': "'", '’':"'", "“": '"', "”": '"', '  ': ' '}
+    for k, v in replacements.items():
+        text = text.replace(k, v)
+    print(text)
+    return text.strip()
 
 def convert_articles_to_output_file(filename, articles):
     """
