@@ -23,7 +23,10 @@ def get_articles(**kwargs):
     page_range = kwargs['page_range']
     for var_name, val in kwargs.items():
         if var_name != 'page_range' and var_name != 'show_text':
-            url_start += var_name+'='+str(val)+'&'
+            if var_name == 'fq':
+                url_start+=var_name+'='+str(val)+' AND glocations:("NEW YORK CITY")&'
+            else:
+                url_start += var_name+'='+str(val)+'&'
     for page in range(1, page_range + 1):
         response = requests.get(url_start+'page={}'.format(page))
         if not response.json():
