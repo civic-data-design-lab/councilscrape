@@ -19,7 +19,7 @@ def get_articles(api_key, q, fq, page_range = 100, begin_date = None, end_date =
     returns articles outputted from search
     """
     all_articles = []
-    for page in range(1, page_range+1):
+    for page in range(100, page_range+1):
         if begin_date==None and end_date==None:
             response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&page={}&api-key={}'.format(q,fq,page,api_key))
         elif begin_date==None and end_date:
@@ -28,6 +28,8 @@ def get_articles(api_key, q, fq, page_range = 100, begin_date = None, end_date =
             response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&page={}&api-key={}&begin_date={}'.format(q,fq,page,api_key,begin_date))
         else:
             response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&page={}&api-key={}&begin_date={}&end_date={}'.format(q,fq,page,api_key,begin_date,end_date))
+        if response.json()['response']['docs']==[]:
+            break
         all_articles += organize(response.json(), False)
     return all_articles
 
@@ -41,8 +43,9 @@ def organize(articles, show_text = True):
     Note: these elements in the dictionary can be changed easily, so please change them if needed.
     I thought these would be nice to have, so change this code if any of this information is useless to have
     """
-    if 'response' not in articles.keys():
-        return None
+    if articles:
+        if 'response' not in articles.keys():
+            return None
     l = []
     for article in articles['response']['docs']:
         new_art = {}
@@ -67,17 +70,18 @@ def organize(articles, show_text = True):
 def clean_string(text):
     """
     Helper function that takes in an article text as a string
-
     Returns: new string with article text cleaned up
     """
     punct = '?.,!'
     closing = '”’'
     opening = '“‘'
     alph = 'qwertyuiopasdfghjklzxcvbnm'
+    '''
     for letter in alph:
         for p in punct:
             text = text.replace(p+letter, p+' '+letter)
             text = text.replace(p+letter.lower(),p + ' '+letter.lower())
+    '''
     for c in closing:
         text = text.replace(c, c+' ')
     for o in opening:
@@ -85,7 +89,6 @@ def clean_string(text):
     replacements = {'\n': '', '‘': "'", '’':"'", "“": '"', "”": '"', '  ': ' '}
     for k, v in replacements.items():
         text = text.replace(k, v)
-    print(text)
     return text.strip()
 
 def convert_articles_to_output_file(filename, articles):
@@ -108,6 +111,6 @@ def convert_articles_to_output_file(filename, articles):
 
 if __name__ == '__main__':
     ##Use this to test:
-    raw_articles = get_articles(API_KEY, q='City Council', fq = 'body:("Obama")',begin_date=20120101,end_date=20121231)
+    raw_articles = get_articles(API_KEY, q='City Council', fq = 'body:("Obama")',page_range = 100,begin_date=20120101,end_date=20121231)
     organized = organize(raw_articles, False)
     print(organized)
