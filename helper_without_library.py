@@ -19,7 +19,7 @@ def get_articles(api_key, q, fq, page_range = 100, begin_date = None, end_date =
     returns articles outputted from search
     """
     all_articles = []
-    for page in range(100, page_range+1):
+    for page in range(1, page_range+1):
         if begin_date==None and end_date==None:
             response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&page={}&api-key={}'.format(q,fq,page,api_key))
         elif begin_date==None and end_date:
