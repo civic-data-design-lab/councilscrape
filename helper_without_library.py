@@ -57,7 +57,7 @@ def organize(articles, show_text = True):
         page_soup=soup(webpage,"html.parser")
         try:
             content_box=page_soup.find('section', itemprop="articleBody")
-            article_text= content_box.text.strip()
+            article_text= content_box.text
         except:
             continue
         new_art['headline'] = article['headline']['main']
