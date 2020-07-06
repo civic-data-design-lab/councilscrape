@@ -14,19 +14,22 @@ page_soup=soup(webpage,"html.parser")
 content_box=page_soup.find('section', itemprop="articleBody")
 content= content_box.text.strip()
 '''
-def get_articles(api_key,q,fq,begin_date=None,end_date=None):
+def get_articles(api_key, q, fq, page_range = 100, begin_date = None, end_date = None):
     """
     returns articles outputted from search
     """
-    if begin_date==None and end_date==None:
-        response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&api-key={}'.format(q,fq,api_key))
-    elif begin_date==None and end_date:
-        response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&api-key={}&end_date={}'.format(q,fq,api_key,end_date))
-    elif end_date==None and begin_date:
-        response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&api-key={}&begin_date={}'.format(q,fq,api_key,begin_date))
-    else:
-        response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&api-key={}&begin_date={}&end_date={}'.format(q,fq,api_key,begin_date,end_date))
-    return response.json()
+    all_articles = []
+    for page in range(1, page_range+1):
+        if begin_date==None and end_date==None:
+            response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&page={}&api-key={}'.format(q,fq,page,api_key))
+        elif begin_date==None and end_date:
+            response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&page={}&api-key={}&end_date={}'.format(q,fq,page,api_key,end_date))
+        elif end_date==None and begin_date:
+            response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&page={}&api-key={}&begin_date={}'.format(q,fq,page,api_key,begin_date))
+        else:
+            response=requests.get('https://api.nytimes.com/svc/search/v2/articlesearch.json?q={}&fq={}&page={}&api-key={}&begin_date={}&end_date={}'.format(q,fq,page,api_key,begin_date,end_date))
+        all_articles += organize(response.json(), False)
+    return all_articles
 
 def organize(articles, show_text = True):
     """
@@ -57,7 +60,7 @@ def organize(articles, show_text = True):
         new_art['headline'] = article['headline']['main']
         new_art['date_published'] = article['pub_date'][5:7]+'/'+article['pub_date'][8:10]+"/"+article['pub_date'][:4]
         if show_text:
-            new_art['text'] = article_text
+            new_art['text'] = clean_string(article_text)
         l.append(new_art)
     return l
 
