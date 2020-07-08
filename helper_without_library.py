@@ -78,9 +78,16 @@ def clean_string(text):
 
     Returns: new string with article text cleaned up
     """
-    punct = ['"', "'", '’','‘', '“', '”', '?', ',', '!', '\n', '.', ';']
-    for p in punct:
-        text = text.replace(p, '')
+    useless_words = ['mr.', 'mrs.', 'ms.', 'dr.', 'said', "new yorkers" 'new yorker', 'yorker', "new yorks", 'new york', '—']
+    text = text.lower()
+    punct = '?.,!'
+    replacements = {'\n', "'", '"', '”', '’', '“', '‘'}
+    for r in replacements:
+        text = text.replace(r, '')
+    for word in useless_words:
+        text = text.replace(' '+word, '')
+        text = text.replace(word+' ', '')
+    text = text.replace('  ', ' ')
     return text.strip()
 
 def convert_articles_to_output_file(filename, articles):
