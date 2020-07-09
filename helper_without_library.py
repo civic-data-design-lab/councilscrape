@@ -76,9 +76,9 @@ def clean_string(text):
     """
     Helper function that takes in an article text as a string
 
-    Returns: new string with article text cleaned up
+    Returns: new string with article text cleaned up, punctuation and stop words removed
     """
-    useless_words = ['mr.', 'mrs.', 'ms.', 'dr.', 'said', "new yorkers" 'new yorker', 'yorker', "new yorks", 'new york', '—']
+    useless_words = ['mr.', 'mrs.', 'ms.', 'dr.', 'said', "new yorkers" 'new yorker', 'yorker', 'new york citys', 'new york city', "new yorks", 'new york', '—']
     text = text.lower()
     punct = '?.,!'
     replacements = {'\n', "'", '"', '”', '’', '“', '‘'}
