@@ -6,6 +6,7 @@ from urllib.error import HTTPError
 from bs4 import BeautifulSoup as soup
 import unittest
 import csv
+import time
 
 API_KEY = 'U4XXY5ozk9hpOMIJEAaLAFWPk9Wui5Cl'
 CURRENT_COUNCIL_MEMBERS = {18: 'Ruben Diaz', 42: 'Inez Barron', 14: 'Fernando Cabrera', 1: 'Margaret Chin', 11: 'Andrew Cohen', 36: 'Robert Cornegy', 22: 'Costa Constantinides', 30: 'Robert Holden', 35: 'Laurie Cumbo', 48: 'Chaim M. Deutsch', 25: 'Daniel Dromm', 37: 'Rafael Espinal', 40: 'Mathieu Eugene', 4: 'Keith Powers', 43: 'Justin Brannan', 16: 'Vanessa L Gibson', 44: 'Kalman Yeger', 3: 'Corey Johnson', 12: 'Andy King', 5: 'Ben Kallos', 20: 'Peter Koo', 29: 'Karen Koslowitz', 24: 'Rory Lancman', 39: 'Brad Lander', 33: 'Stephen Levin', 7: 'Mark Levine', 46: 'Alan Maisel', 8: 'Diana Ayala', 50: 'Steven Matteo', 41: 'Alicka Ampry-Samuel', 38: 'Carlos Menchaca', 2: 'Carlina Rivera', 27: 'I. Daneek Miller', 31: 'Donovan Richards', 10: 'Ydanis Rodriguez', 49: 'Deborah Rose', 6: 'Helen Rosenthal', 15: 'Ritchie Torres', 47: 'Mark Treyger', 32: 'Eric Ulrich', 13: 'Mark Gjonaj', 19: 'Paul Vallone', 26: 'Jimmy Van Bramer', 45: 'Farah Louis', 21: 'Francisco Moya', 28: 'Adrienne Adams', 51: 'Joseph Borelli', 34: 'Antonio Reynoso', 9: 'Bill Perkins', 23: 'Barry Grodenchik', 17: 'Rafael Salamanca'}
@@ -19,7 +20,7 @@ def get_articles(**kwargs):
     Other useful inputs:
     q, fq, begin_date, end_date
     """
-    url_start = 'https://api.nytimes.com/svc/search/v2/articlesearch.json?api-key=U4XXY5ozk9hpOMIJEAaLAFWPk9Wui5Cl&'
+    url_start = 'https://api.nytimes.com/svc/search/v2/articlesearch.json?api-key=gH2h4sOKnM4ALn4fjHuupu0PEUrHAPo7&'
     all_articles = []
     page_range = kwargs['page_range']
     for var_name, val in kwargs.items():
@@ -30,6 +31,7 @@ def get_articles(**kwargs):
                 url_start += var_name+'='+str(val)+'&'
     for page in range(1, page_range + 1):
         response = requests.get(url_start+'page={}'.format(page))
+        time.sleep(6)
         response= response.json()
         if not response:
             break
@@ -123,9 +125,14 @@ def convert_articles_to_output_file(filename, articles):
         print('successfully written '+str(len(articles))+' articles to file: '+filename)
 
 if __name__ == '__main__':
+
     all_arts = []
-    for dist_num, name in PAST_COUNCIL_MEMBERS.items():
-        print(dist_num)
-        articles = get_articles(district = dist_num, show_text = True, page_range = 100, fq = 'body:("{}")'.format(name), begin_date = 20130101, end_date = 20170101)
+    for dist_num, name in CURRENT_COUNCIL_MEMBERS.items():
+        articles = get_articles(district = dist_num, show_text = True, page_range = 100, fq = 'body:("{}")'.format(name), begin_date = 20170101, end_date = 20200713)
+        if articles == []:
+            print('no articles for: '+name+' district '+str(dist_num))
+        else:
+            print(str(len(articles))+' articles found for '+name)
         all_arts += articles
-    convert_articles_to_output_file('2013-2016_Council_Articles.csv', all_arts)
+    convert_articles_to_output_file('2017-2020_Council_Articles.csv', all_arts)
+    
