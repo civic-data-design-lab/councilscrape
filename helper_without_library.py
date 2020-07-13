@@ -115,13 +115,8 @@ def convert_articles_to_output_file(filename, articles):
         print('successfully written '+str(len(articles))+' articles to file: '+filename)
 
 if __name__ == '__main__':
-    # res = unittest.main(verbosity=3, exit=False)
-    # articles = get_articles(show_text = True, page_range = 100, q = 'City Council', fq = 'body:("City Council")', begin_date = 20200101)
-    # month_articles = {'01': [], '02': [], '03': [], '04': [], '05': [], '06': [], '07': [], '08': [], '09': [], '10': [], '11': [], '12': []}
-    # for article in articles:
-    #     month = article['date_published'][0:2]
-    #     month_articles[month].append(article)
-    # for k, v in month_articles.items():
-    #     if v:
-    #         convert_articles_to_output_file(k+'_2020_Articles.csv', v)
-    pass
+    all_arts = []
+    for dist_num, name in CURRENT_COUNCIL_MEMBERS.items():
+        articles = get_articles(district = dist_num, show_text = True, page_range = 100, fq = 'body:("{}")'.format(name), begin_date = 20170101, end_date = 20200713)
+        all_arts += articles
+    convert_articles_to_output_file('2017-2020_Council_Articles.csv', all_arts)
