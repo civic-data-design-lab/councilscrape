@@ -23,20 +23,26 @@ def get_articles(**kwargs):
     all_articles = []
     page_range = kwargs['page_range']
     for var_name, val in kwargs.items():
-        if var_name != 'page_range' and var_name != 'show_text':
+        if var_name != 'page_range' and var_name != 'show_text' and var_name!='district':
             if var_name == 'fq':
                 url_start+=var_name+'='+str(val)+' AND glocations:("NEW YORK CITY")&'
             else:
                 url_start += var_name+'='+str(val)+'&'
     for page in range(1, page_range + 1):
         response = requests.get(url_start+'page={}'.format(page))
-        if not response.json():
+        response= response.json()
+        if not response:
             break
-        if organize(response.json(), kwargs['show_text']) is not None:
-            all_articles += organize(response.json(), kwargs['show_text'])
+        elif 'response' not in response:
+            break
+        elif response['response']['docs']==[]:
+            break
+        organized= organize(response, kwargs['show_text'],kwargs['district'])
+        if organized is not None:
+            all_articles += organized
     return all_articles
 
-def organize(articles, show_text = True):
+def organize(articles, show_text = True, district=None):
     """
     Takes in the result of the NY Times search method (which is a python dictionary)
     Returns: a list of python dictionaries, each dictionary corresponding to an article
@@ -53,6 +59,8 @@ def organize(articles, show_text = True):
         new_art = {}
         url=article['web_url']
         new_art['url'] = url
+        if district:
+            new_art['district']=district
         ##Check to see if article has text:
         try:
             req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -117,6 +125,7 @@ def convert_articles_to_output_file(filename, articles):
 if __name__ == '__main__':
     all_arts = []
     for dist_num, name in PAST_COUNCIL_MEMBERS.items():
+        print(dist_num)
         articles = get_articles(district = dist_num, show_text = True, page_range = 100, fq = 'body:("{}")'.format(name), begin_date = 20130101, end_date = 20170101)
         all_arts += articles
     convert_articles_to_output_file('2013-2016_Council_Articles.csv', all_arts)
