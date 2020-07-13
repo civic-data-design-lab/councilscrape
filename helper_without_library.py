@@ -116,7 +116,7 @@ def convert_articles_to_output_file(filename, articles):
 
 if __name__ == '__main__':
     all_arts = []
-    for dist_num, name in CURRENT_COUNCIL_MEMBERS.items():
-        articles = get_articles(district = dist_num, show_text = True, page_range = 100, fq = 'body:("{}")'.format(name), begin_date = 20170101, end_date = 20200713)
+    for dist_num, name in PAST_COUNCIL_MEMBERS.items():
+        articles = get_articles(district = dist_num, show_text = True, page_range = 100, fq = 'body:("{}")'.format(name), begin_date = 20130101, end_date = 20170101)
         all_arts += articles
-    convert_articles_to_output_file('2017-2020_Council_Articles.csv', all_arts)
+    convert_articles_to_output_file('2013-2016_Council_Articles.csv', all_arts)
