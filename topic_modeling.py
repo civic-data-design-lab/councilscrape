@@ -1,12 +1,16 @@
 import csv
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.decomposition import NMF, LatentDirichletAllocation
+from nltk.corpus import stopwords 
+from nltk.tokenize import word_tokenize
+from nltk.stem import PorterStemmer
 
 no_features = 1000
-no_topics = 2
-no_top_words = 8
+no_topics = 3
+no_top_words = 15
 
 MONTH_DICT = {1: 'Jan.', 2: 'Feb.', 3: 'Mar.', 4: 'Apr.', 5: 'May', 6: 'Jun.', 7: 'Jul.', 8: 'Aug.', 9: 'Sep.', 10: 'Oct.', 11: 'Nov.', 12: 'Dec.'}
+TEST_STRING = "Mayor Bill de Blasio’s administration is expected on Tuesday to add the Lunar New Year to the New York public school calendar, allowing the city’s Asian families to celebrate an important holiday with their children without tarnishing attendance records.Mr. de Blasio, a Democrat, pledged to make the change during the 2013 mayoral campaign, but by agreeing to the move now, he avoids a potentially political embarrassment. With a pending bill in Albany that would have added the holiday to the calendar, the mayor faced the uncomfortable prospect of the State Legislature’s enacting his own campaign pledge for him, without the imprimatur of City Hall.The Lunar New Year is celebrated throughout many parts of Asia. When it falls on a school day, some city schools with large Asian populations have more than half their students absent that day.“Finally, students of Asian descent will not be forced to choose between observing the most important holiday of the year and missing important academic work,” Councilwoman Margaret Chin, a Democrat of Lower Manhattan, said in a statement. “Lunar New Year is a deeply important cultural observance for nearly 15 percent of public school students, and this designation gives Lunar New Year the respect and recognition it has long deserved.”This move comes just three months after the de Blasio administration added two Muslim holy days to the school calendar, Eid al-Fitr and Eid al-Adha. Mr. de Blasio’s predecessor, Mayor Michael R. Bloomberg, had declined to do so, saying children needed more time in school.In New York State, schools must have at least 180 days of instruction each year. To accommodate the new time off without losing time in the classroom, the de Blasio administration said it planned to convert two half-days to full days. The new schedule will go into effect this coming school year, with the holiday falling on Feb. 8.State Senator Daniel L. Squadron, a Democrat whose district includes Manhattan’s Chinatown, said the inclusion of the holiday signaled, in part, the increased political presence of the city’s Asian community.“There’s no question this reflects the changing city and the changing significance of the holiday to this city,” Mr. Squadron said.New York is not the first city to add this holiday to its school calendar. Public schools in San Francisco, for example, have observed the holiday for several years.The de Blasio administration made the announcement about Lunar New Year on Twitter on Monday evening, saying it was “working toward a more inclusive city.” The city also posted the news in traditional Chinese and Korean."
 
 def setup(fname):
     """
@@ -21,7 +25,28 @@ def create_dataset(articles):
     parameters: the list of article dictionaries
     returns list of texts
     """
-    return [article['text'] for article in articles]
+    return [clean_string(article['text']) for article in articles]
+
+def clean_string(text):
+    """
+    Helper function that takes in an article text as a string
+    Returns: new string with article text cleaned up, punctuation and stop words removed
+    """
+    ps = PorterStemmer()
+    punct = '?.,!\n1234567890'
+    useless_words = {'mr', 'mrs', 'ms', 'dr', 'said', 'says', "new",'yorker', 'yorkers','york', 'city', 'de', 'blasio', 'council', 'bill', 'mayor', 'quinn', 'bloomberg'}
+    text = text.lower()
+    for p in punct:
+        text = text.replace(p, ' ')
+    stop_words = set(stopwords.words('english'))|useless_words
+    word_tokens = word_tokenize(text)
+    new_text = ''
+    for token in word_tokens:
+        if len(token) > 1 and token not in stop_words:
+            new_text += ps.stem(token)+' '
+    return new_text.strip()
+    
+    
 
 def run_lda(documents):
     """
@@ -68,19 +93,35 @@ def write_results_to_csv(topic_text, filename):
 
 if __name__ == '__main__':
     #Tests:
-    # for y in range(2020, 2021):
+
+
+    
+    ##monthly topics:
+
+    for y in range(2013, 2021):
+        year = str(y)
+        months  = {'01': [], '02': [], '03': [], '04': [], '05': [], '06': [], '07': [], '08': [], '09': [], '10': [], '11': [], '12': []}
+        articles = setup('New_Articles_'+year+'.csv')
+        for a in articles:
+            date = a['date_published'][0:2]
+            months[date].append(a)
+        all_topics = []
+        for k, v in months.items():
+            if v:
+                documents = create_dataset(v)
+                lda, tf_feature_names = run_lda(documents)
+                lda_topics = display_topics(lda, tf_feature_names, no_top_words)
+                all_topics+= [(MONTH_DICT[int(k)],)]
+                all_topics+=lda_topics
+        write_results_to_csv(all_topics, 'Month_by_Month_LDA_'+year+'.csv')
+
+    # for y in range(2013,2021):
     #     year = str(y)
-    #     all_topics = []
-    #     for i in range(1, 8):
-    #         if i < 10:
-    #             month = '0'+str(i)
-    #         else:
-    #             month = str(i)
-    #         articles = setup(month+'_'+year+'_Articles.csv')
-    #         documents = create_dataset(articles)
-    #         lda, tf_feature_names = run_lda(documents)
-    #         lda_topics = display_topics(lda, tf_feature_names, no_top_words)
-    #         all_topics+= [(MONTH_DICT[i],)]
-    #         all_topics+=lda_topics
-    #     write_results_to_csv(all_topics, year+'_LDA_Results.csv')
-    pass
+    #     articles = setup('New_Articles_'+year+'.csv')
+    #     documents = create_dataset(articles)
+    #     lda, tf_feature_names = run_lda(documents)
+    #     lda_topics = display_topics(lda, tf_feature_names, no_top_words)
+    #     write_results_to_csv(lda_topics, 'LDA_'+str(y)+'.csv')
+
+    
+    #print(clean_string(TEST_STRING))
