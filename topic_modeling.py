@@ -5,8 +5,9 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
 
+
 no_features = 1000
-no_topics = 3
+no_topics = 20
 no_top_words = 15
 
 MONTH_DICT = {1: 'Jan.', 2: 'Feb.', 3: 'Mar.', 4: 'Apr.', 5: 'May', 6: 'Jun.', 7: 'Jul.', 8: 'Aug.', 9: 'Sep.', 10: 'Oct.', 11: 'Nov.', 12: 'Dec.'}
@@ -34,16 +35,21 @@ def clean_string(text):
     """
     ps = PorterStemmer()
     punct = '?.,!\n1234567890'
-    useless_words = {'mr', 'mrs', 'ms', 'dr', 'said', 'says', "new",'yorker', 'yorkers','york', 'city', 'de', 'blasio', 'council', 'bill', 'mayor', 'quinn', 'bloomberg'}
+    useless_words = {'mr', 'mrs', 'ms', 'dr', 'said', 'says', "new",'yorker', 'yorkers','york', 'city', 'de', 'blasio', 'council', 'bill', 'mayor', 'quinn', 'bloomberg', 'yearly', 'years', 'year', 'also', 'would', 'could'}
     text = text.lower()
     for p in punct:
         text = text.replace(p, ' ')
     stop_words = set(stopwords.words('english'))|useless_words
     word_tokens = word_tokenize(text)
+    new_toks = []
+    for tok in word_tokens:
+        if len(tok) > 1 and tok not in stop_words:
+            new_toks.append(ps.stem(tok))
+    
+    # return new_toks
     new_text = ''
-    for token in word_tokens:
-        if len(token) > 1 and token not in stop_words:
-            new_text += ps.stem(token)+' '
+    for token in new_toks:
+        new_text += token+' '
     return new_text.strip()
     
     
@@ -79,6 +85,7 @@ def display_topics(model, feature_names, no_top_words):
         out.append((top, topic_data))
     return out
 
+
 def write_results_to_csv(topic_text, filename):
     """
     parameters: the output from displat_topics, intended filename
@@ -98,30 +105,56 @@ if __name__ == '__main__':
     
     ##monthly topics:
 
-    for y in range(2013, 2021):
-        year = str(y)
-        months  = {'01': [], '02': [], '03': [], '04': [], '05': [], '06': [], '07': [], '08': [], '09': [], '10': [], '11': [], '12': []}
-        articles = setup('New_Articles_'+year+'.csv')
-        for a in articles:
-            date = a['date_published'][0:2]
-            months[date].append(a)
-        all_topics = []
-        for k, v in months.items():
-            if v:
-                documents = create_dataset(v)
-                lda, tf_feature_names = run_lda(documents)
-                lda_topics = display_topics(lda, tf_feature_names, no_top_words)
-                all_topics+= [(MONTH_DICT[int(k)],)]
-                all_topics+=lda_topics
-        write_results_to_csv(all_topics, 'Month_by_Month_LDA_'+year+'.csv')
-
-    # for y in range(2013,2021):
+    # for y in range(2013, 2021):
     #     year = str(y)
+    #     months  = {'01': [], '02': [], '03': [], '04': [], '05': [], '06': [], '07': [], '08': [], '09': [], '10': [], '11': [], '12': []}
     #     articles = setup('New_Articles_'+year+'.csv')
-    #     documents = create_dataset(articles)
+    #     for a in articles:
+    #         date = a['date_published'][0:2]
+    #         months[date].append(a)
+    #     all_topics = []
+    #     for k, v in months.items():
+    #         if v:
+    #             documents = create_dataset(v)
+    #             lda, tf_feature_names = run_lda(documents)
+    #             lda_topics = display_topics(lda, tf_feature_names, no_top_words)
+    #             all_topics+= [(MONTH_DICT[int(k)],)]
+    #             all_topics+=lda_topics
+    #     write_results_to_csv(all_topics, 'Month_by_Month_LDA_'+year+'.csv')
+
+    """
+    Here are NMF tests by year!!!
+    """
+    for y in range(2013,2021):
+        year = str(y)
+        articles = setup('New_Articles_'+year+'.csv')
+        documents = create_dataset(articles)
+        # train_texts = create_dataset(articles)
+        # dictionary = Dictionary(train_texts)
+        # corpus = [dictionary.doc2bow(text) for text in train_texts]
+        # hdpmodel = HdpModel(corpus=corpus, id2word=dictionary)
+        # hdptopics = display(hdpmodel.show_topics(formatted = False))
+        # write_results_to_csv(hdptopics, 'HDP_'+str(y)+'.csv')
+        # lda, tf_feature_names = run_lda(documents)
+        # lda_topics = display_topics(lda, tf_feature_names, no_top_words)
+        # write_results_to_csv(lda_topics, 'LDA_'+str(y)+'.csv')
+        nmf, feature_names = run_nmf(documents)
+        nmf_topics = display_topics(nmf, feature_names, no_top_words)
+        write_results_to_csv(nmf_topics, 'NMF_'+str(y)+'.csv')
+
+
+
+    # articles = setup('New_Articles_2019.csv')
+    # train_texts = create_dataset(articles)
+    # dictionary = Dictionary(train_texts)
+    # corpus = [dictionary.doc2bow(text) for text in train_texts]
+    # hdpmodel = HdpModel(corpus=corpus, id2word=dictionary)
+    # print(display(hdpmodel.show_topics(formatted = False)))
+    # ldamodel = LdaModel(corpus=corpus, num_topics=20, id2word=dictionary)
+    # print(display(ldamodel.show_topics(formatted = False)))
+    
+    # for i in range(5,31):
+    #     no_topics = i
     #     lda, tf_feature_names = run_lda(documents)
     #     lda_topics = display_topics(lda, tf_feature_names, no_top_words)
-    #     write_results_to_csv(lda_topics, 'LDA_'+str(y)+'.csv')
-
-    
-    #print(clean_string(TEST_STRING))
+    #     write_results_to_csv(lda_topics, 'LDA_'+str(i)+'_topics.csv')
